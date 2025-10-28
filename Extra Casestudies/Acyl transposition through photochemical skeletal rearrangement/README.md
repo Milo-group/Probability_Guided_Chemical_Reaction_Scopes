@@ -1,4 +1,4 @@
-In this folder there is one subfolder and one file:  
+In this folder there is one subfolder and two files:  
   
 **Data**  
 Contains the ```computed_descriptors_Sarpong2025.csv``` dataset used for modeling. It includes molecule tags, SMILES for each molecule, all features, and the class output.  

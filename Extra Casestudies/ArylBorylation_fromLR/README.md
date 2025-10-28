@@ -1,4 +1,4 @@
-In this folder there is one subfolder and one file:  
+In this folder there is one subfolder and two files:  
 
 **Data**
 Contains the ```Stevens_data_organized_for_classification.csv``` dataset used for modeling. It includes molecule tags, InChIs for each molecule, all features, and the class output.

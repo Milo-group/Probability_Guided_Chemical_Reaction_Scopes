@@ -5,10 +5,10 @@ This folder contains five subfolders:
 **3-class ordinal - Published**  
 Contains the published multinomial model from the manuscript containing only three reaction condition classes.  
   
-**4-class - SI**
+**4-class - SI**  
 Contains the multinomial model from the SI, including four classes: three reaction condition classes and one null class.
   
-**Binary - Published**
+**Binary - Published**  
 Contains the published binary viability model from the manuscript, referring to whether a reaction did or did not work.
   
 **Phosphination - 10% holdout - SI**  

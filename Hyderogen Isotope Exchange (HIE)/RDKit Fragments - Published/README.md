@@ -7,8 +7,8 @@ All relevant ```*.csv``` files used for modeling and two ```*.R``` files for rep
 PDF files containing various model reports, with and without ordinal implementation, and with and without similarity under-sampling.  
 
 **Files list**  
-Names_smiles
+`Names_smiles.csv`  
 Contains the SMILES representations of the molecules in the dataset.  
   
-Names_smiles_Predictions
+`Names_smiles_Predictions.csv`  
 Contains the SMILES representations of the predicted molecules.

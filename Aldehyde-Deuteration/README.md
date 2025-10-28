@@ -1,3 +1,19 @@
+This folder contains the following subfolders:
+  
+**Data**  
+All relevant ```*.csv``` files used for modeling and two ```*.R``` files for reproducing the models and performing cross-validation.  
+  
+**Model reports**  
+PDF files containing various model reports, with and without ordinal implementation, and with and without similarity under-sampling.  
+  
+**Psy-Chem**  
+Data related to the expert survey conducted to determine whether classification is necessary.  
+  
+**XYZ structures**  
+XYZ structures of data used in this study.  
+  
+Below is an example of how to model the data (the corresponding ```*.R``` file is provided in the Data folder):  
+  
 ```r
 library(rxn.cond.class)
 

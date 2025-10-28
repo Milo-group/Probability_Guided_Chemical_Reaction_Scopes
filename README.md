@@ -1,5 +1,25 @@
+# Probability Guided Chemical Reaction Scopes - Data Repository
 
-# Classify Chemical Reaction Conditions with the R Package `rxn.cond.class`
+This GitHub repository contains all data connected to our paper **"Probability Guided Chemical Reaction Scopes"**.  
+
+The main folders are:
+
+- **Aldehyde-Deuteration**  
+- **Hydrogen Isotope Exchange (HIE)**  
+- **Pyridine-Phosphination**  
+
+These folders contain the data from the manuscript and all analyses that appear either in the manuscript or the Supporting Information (SI).  
+
+Another subfolder is:
+
+- **Extra_CaseStudies**  
+  Contains data for other cases we modeled, which appear in the SI.  
+
+---
+
+# General Guide for Using the Classification Code: Classify Chemical Reaction Conditions with the R Package `rxn.cond.class`
+
+Below is a general guide for using the classification code provided in this repository. 
 
 `rxn.cond.class` is an R package designed to classify and visualize logistic regression classification models for chemical reaction conditions using both ordinal and non-ordinal models. It includes functionality for similarity-based sampling, model ranking, model evaluation, and heatmap visualization for model performance.
 

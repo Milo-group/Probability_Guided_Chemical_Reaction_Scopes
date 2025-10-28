@@ -1,0 +1,598 @@
+---
+title: "Random Sampling"
+date: "`r format(Sys.time(), '%d/%m/%y')`"
+author: "Inbal Lorena Eshel"
+output:
+  word_document: default
+  pdf_document: 
+  html_document:
+    highlight: null
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+"
+# Install
+remotes::install_github('barkais/rxn.cond.class', force = TRUE)
+"
+
+# Packege loading
+library('rxn.cond.class')
+library(caret)
+library(dplyr)
+library(knitr)
+```
+
+```{r Data handeling, include=FALSE}
+# Load data
+Deuter <- read.csv('Training_Data.csv')
+rownames(Deuter) <- Deuter[,2]
+Deuter <- Deuter[,-c(1,2,3)]
+
+# Convert the first 124 columns to numeric values
+Deuter[, 1:(ncol(Deuter) - 1)] <- 
+  as.numeric(as.matrix(Deuter[, 1:(ncol(Deuter) - 1)]))
+
+# data set as factor
+Deuter[, ncol(Deuter)] <- as.factor(Deuter[, ncol(Deuter)])
+
+# Add a 'flag' column to sequentially number the rows
+Deuter <- plyr::mutate(Deuter, flag = seq(1,nrow(Deuter)))
+```
+
+```{r Train and test function to add to the McFadden values, include = FALSE}
+
+fit_models_with_accuracy <- function(models_df, train_data, test_data) {
+  n <- nrow(models_df)
+  
+  # vecotrs of "0" in the length of the amount of models found by our models
+  train_acc <- numeric(n)
+  test_acc  <- numeric(n)
+  
+  for (i in 1:n) {
+    # Extract formula from first column
+    test.form <- models_df[i, 1][[1]]
+    
+    ## Fit multinomial model
+    # For non-ordinal
+#    model <- nnet::multinom(test.form, data = train_data, maxit = 2000, trace = FALSE) 
+    
+    # For ordinal
+    # Define starting coefficients
+    num.of.vars <- stringi::stri_count(test.form, fixed = '+')
+    start <- c(rep(0, num.of.vars + 2), 1)
+    
+    # Train model
+    model <- fit_polr(formula = test.form, data = train_data)
+    
+    # Capture output from mod.info without printing the output
+    model.info.train <- { tmp <- capture.output(res <- mod.info(model, train_data, TRUE, TRUE)); res }
+    model.info.test  <- { tmp <- capture.output(res <- mod.info(model, test_data, FALSE, FALSE)); res }
+    
+    # Save accuracies
+    train_acc[i] <- model.info.train$accuracy_print
+    test_acc[i]  <- round(model.info.test$accuracy, 2)
+  }
+  
+  # Combine into final table
+  final_table <- cbind(models_df, 'Train Accuracy' = train_acc, 'Test Accuracy' = test_acc)
+  
+  return(final_table)
+}
+
+```
+
+```{r Cross validation function, include = FALSE}
+
+cv_classification <- function(data,
+                              test.form,
+                              ordinal = FALSE,
+                              k = 5,
+                              n.iter = 1,
+                              seed = NULL,
+                              verbose = FALSE,
+                              ...) {
+  if (!requireNamespace("caret", quietly = TRUE)) stop("Please install 'caret'")
+  if (!requireNamespace("nnet", quietly = TRUE)) stop("Please install 'nnet'")
+  
+  # Keep original string for fit_polr
+  # Convert to formula only for extracting response
+  test.form1 <- as.formula(test.form)
+  
+  # Extract response variable safely from formula object
+  resp_var <- deparse(test.form1[[2]])          # turns objecct to string          
+  resp_var_clean <- gsub("`", "", resp_var)     # clean name for data indexing
+  
+  # Check response column exists and factorize
+  if (!resp_var_clean %in% names(data)) stop("response variable not found in data")
+  if (!is.factor(data[[resp_var_clean]])) {
+    warning("Response variable coerced to factor for stratified sampling.")
+    data[[resp_var_clean]] <- factor(data[[resp_var_clean]])
+  }
+  
+  n <- nrow(data)
+  classes <- levels(data[[resp_var_clean]])
+  
+  # Handle "LOO"
+  loo <- FALSE
+  if (is.character(k) && tolower(k) == "loo") {
+    k <- n
+    loo <- TRUE
+  }
+  
+  # Prevent repeats in LOO
+  if (k == n && n.iter > 1) {
+    if (verbose) message("LOO detected. Repeats ignored; performing LOO once.")
+    n.iter <- 1
+  }
+  
+  results_table <- data.frame()
+  
+  for (iter in seq_len(n.iter)) {
+    if (!is.null(seed)) set.seed(seed + iter)
+    
+    if (k == n) {
+      folds <- as.list(seq_len(n))  # LOO
+    } else {
+      folds <- caret::createFolds(data[[resp_var_clean]], k = k, list = TRUE, returnTrain = FALSE)
+    }
+    
+    for (f in seq_along(folds)) {
+      test_idx <- folds[[f]]
+      Train.data <- data[-test_idx, , drop = FALSE]
+      Test.data  <- data[test_idx, , drop = FALSE]
+      
+      # Ensure all factor levels are retained in training fold
+      Train.data[[resp_var_clean]] <- factor(Train.data[[resp_var_clean]], levels = classes)
+      
+      # Skip if <2 classes in training
+      if (length(unique(Train.data[[resp_var_clean]])) < 2) next
+      
+      # Fit model (nnet::multinom uses a random initialization of weights, so LOO my alter)
+      if (!ordinal) {
+        model <- nnet::multinom(test.form1, data = Train.data, maxit = 2000, trace = FALSE)
+      } else {
+        # Ordinal: use the original string formula with backticks
+        model <- fit_polr(formula = test.form, data = Train.data)
+      }
+      
+      # Predict class
+      pred_class <- predict(model, newdata = Test.data, type = "class")
+      acc <- mean(as.character(pred_class) == as.character(Test.data[[resp_var_clean]]))
+      
+      # Class counts
+      class_counts <- table(factor(Test.data[[resp_var_clean]], levels = classes))
+      
+      # Build row
+      row <- data.frame(
+        iteration = iter,
+        fold = f,
+        left_out_samples = paste(test_idx, collapse = ","),
+        accuracy = acc
+      )
+      
+      # Add predicted class only for LOO
+      if (loo) row$predicted_class <- as.character(pred_class)
+      
+      # Add class counts
+      row <- cbind(row, as.list(as.numeric(class_counts)))
+      names(row)[(ncol(row)-length(classes)+1):ncol(row)] <- classes
+      
+      results_table <- rbind(results_table, row)
+      
+      # Verbose message (optional)
+      if (verbose) {
+        message(sprintf("  Iter %d Fold %d accuracy = %.4f", iter, f, acc))
+      }
+    }
+  }
+  
+  overall_mean <- mean(results_table$accuracy, na.rm = TRUE)
+  
+  list(
+    results_table = results_table,
+    overall_mean_accuracy = overall_mean,
+    k = if (k == n) "LOO" else k,
+    n.iter = n.iter
+  )
+}
+```
+# *Perform Random stratified sampling*
+
+## *1st random sampling*
+
+```{r 1st random sampling, echo=FALSE, results='asis'}
+set.seed(1001)
+
+train_index <- createDataPartition(Deuter$class, p = 0.75, list = FALSE)
+
+Train.data1 <- Deuter[train_index, ]
+Test.data1 <- Deuter[-train_index, ]
+
+cat("### Test data as a result of random sampling\n")
+
+rows <- rownames(Test.data1) 
+cat(paste0(rows, collapse = ", "))
+
+# Train models using the McFadden approach on the subset of data
+models1 <- sub_model_log(data = Train.data1, 
+                        min = 4, 
+                        max = 4, 
+                        ordinal = T)
+
+final_table1 <- fit_models_with_accuracy(models1, Train.data1, Test.data1)
+knitr::kable(final_table1)
+```
+
+## *2nd random sampling*
+
+```{r 2nd random sampling, echo=FALSE, results='asis'}
+set.seed(1002)
+
+train_index <- createDataPartition(Deuter$class, p = 0.75, list = FALSE)
+
+Train.data2 <- Deuter[train_index, ]
+Test.data2 <- Deuter[-train_index, ]
+
+cat("### Test data as a result of random sampling\n")
+
+rows <- rownames(Test.data2) 
+cat(paste0(rows, collapse = ", "))
+
+# Train models using the McFadden approach on the subset of data
+models2 <- sub_model_log(data = Train.data2, 
+                        min = 4, 
+                        max = 4, 
+                        ordinal = T)
+
+final_table2 <- fit_models_with_accuracy(models2, Train.data2, Test.data2)
+knitr::kable(final_table2)
+```
+
+## *3rd random sampling*
+
+```{r 3rd random sampling, echo=FALSE, results='asis'}
+set.seed(1003)
+
+train_index <- createDataPartition(Deuter$class, p = 0.75, list = FALSE)
+
+Train.data3 <- Deuter[train_index, ]
+Test.data3 <- Deuter[-train_index, ]
+
+cat("### Test data as a result of random sampling\n")
+
+rows <- rownames(Test.data3) 
+cat(paste0(rows, collapse = ", "))
+
+# Train models using the McFadden approach on the subset of data
+models3 <- sub_model_log(data = Train.data3, 
+                        min = 4, 
+                        max = 4, 
+                        ordinal = T)
+
+final_table3 <- fit_models_with_accuracy(models3, Train.data3, Test.data3)
+knitr::kable(final_table3)
+```
+
+## *4th random sampling*
+
+```{r 4th random sampling, echo=FALSE, results='asis'}
+set.seed(1004)
+
+train_index <- createDataPartition(Deuter$class, p = 0.75, list = FALSE)
+
+Train.data4 <- Deuter[train_index, ]
+Test.data4 <- Deuter[-train_index, ]
+
+cat("### Test data as a result of random sampling\n")
+
+rows <- rownames(Test.data4) 
+cat(paste0(rows, collapse = ", "))
+
+# Train models using the McFadden approach on the subset of data
+models4 <- sub_model_log(data = Train.data4, 
+                        min = 4, 
+                        max = 4, 
+                        ordinal = T)
+
+final_table4 <- fit_models_with_accuracy(models4, Train.data4, Test.data4)
+knitr::kable(final_table4)
+```
+
+## *5th random sampling*
+
+```{r 5th random sampling, echo=FALSE, results='asis'}
+set.seed(1005)
+
+train_index <- createDataPartition(Deuter$class, p = 0.75, list = FALSE)
+
+Train.data5 <- Deuter[train_index, ]
+Test.data5 <- Deuter[-train_index, ]
+
+cat("### Test data as a result of random sampling\n")
+
+rows <- rownames(Test.data5) 
+cat(paste0(rows, collapse = ", "))
+
+# Train models using the McFadden approach on the subset of data
+models5 <- sub_model_log(data = Train.data5, 
+                        min = 4, 
+                        max = 4, 
+                        ordinal = T)
+
+final_table5 <- fit_models_with_accuracy(models5, Train.data5, Test.data5)
+knitr::kable(final_table5)
+```
+
+## *6th random sampling*
+
+```{r 6th random sampling, echo=FALSE, results='asis'}
+set.seed(1006)
+
+train_index <- createDataPartition(Deuter$class, p = 0.75, list = FALSE)
+
+Train.data6 <- Deuter[train_index, ]
+Test.data6 <- Deuter[-train_index, ]
+
+cat("### Test data as a result of random sampling\n")
+
+rows <- rownames(Test.data6) 
+cat(paste0(rows, collapse = ", "))
+
+# Train models using the McFadden approach on the subset of data
+models6 <- sub_model_log(data = Train.data6, 
+                        min = 4, 
+                        max = 4, 
+                        ordinal = T)
+
+final_table6 <- fit_models_with_accuracy(models6, Train.data6, Test.data6)
+knitr::kable(final_table6)
+```
+
+## *7th random sampling*
+
+```{r 7th random sampling, echo=FALSE, results='asis'}
+set.seed(1007)
+
+train_index <- createDataPartition(Deuter$class, p = 0.75, list = FALSE)
+
+Train.data7 <- Deuter[train_index, ]
+Test.data7 <- Deuter[-train_index, ]
+
+cat("### Test data as a result of random sampling\n")
+
+rows <- rownames(Test.data7) 
+cat(paste0(rows, collapse = ", "))
+
+# Train models using the McFadden approach on the subset of data
+models7 <- sub_model_log(data = Train.data7, 
+                        min = 4, 
+                        max = 4, 
+                        ordinal = T)
+
+final_table7 <- fit_models_with_accuracy(models7, Train.data7, Test.data7)
+knitr::kable(final_table7)
+```
+
+## *8th random sampling*
+
+```{r 8th random sampling, echo=FALSE, results='asis'}
+set.seed(1008)
+
+train_index <- createDataPartition(Deuter$class, p = 0.75, list = FALSE)
+
+Train.data8 <- Deuter[train_index, ]
+Test.data8 <- Deuter[-train_index, ]
+
+cat("### Test data as a result of random sampling\n")
+
+rows <- rownames(Test.data8) 
+cat(paste0(rows, collapse = ", "))
+
+# Train models using the McFadden approach on the subset of data
+models8 <- sub_model_log(data = Train.data8, 
+                        min = 4, 
+                        max = 4, 
+                        ordinal = T)
+
+final_table8 <- fit_models_with_accuracy(models8, Train.data8, Test.data8)
+knitr::kable(final_table8)
+```
+
+## *9th random sampling*
+
+```{r 9th random sampling, echo=FALSE, results='asis'}
+set.seed(1009)
+
+train_index <- createDataPartition(Deuter$class, p = 0.75, list = FALSE)
+
+Train.data9 <- Deuter[train_index, ]
+Test.data9 <- Deuter[-train_index, ]
+
+cat("### Test data as a result of random sampling\n")
+
+rows <- rownames(Test.data9) 
+cat(paste0(rows, collapse = ", "))
+
+# Train models using the McFadden approach on the subset of data
+models9 <- sub_model_log(data = Train.data9, 
+                        min = 4, 
+                        max = 4, 
+                        ordinal = T)
+
+final_table9 <- fit_models_with_accuracy(models9, Train.data9, Test.data9)
+knitr::kable(final_table9)
+```
+
+## *10th random sampling*
+
+```{r 10th random sampling, echo=FALSE, results='asis'}
+set.seed(1010)
+
+train_index <- createDataPartition(Deuter$class, p = 0.75, list = FALSE)
+
+Train.data10 <- Deuter[train_index, ]
+Test.data10 <- Deuter[-train_index, ]
+
+cat("### Test data as a result of random sampling\n")
+
+rows <- rownames(Test.data10) 
+cat(paste0(rows, collapse = ", "))
+
+# Train models using the McFadden approach on the subset of data
+models10 <- sub_model_log(data = Train.data10, 
+                        min = 4, 
+                        max = 4, 
+                        ordinal = T)
+
+final_table10 <- fit_models_with_accuracy(models10, Train.data10, Test.data10)
+knitr::kable(final_table10)
+```
+
+## Summary of most appearing models:
+```{r Summary random sampling, echo=FALSE}
+
+# Unite all your data frames in a list
+tables <- list(final_table1, final_table2, final_table3, final_table4, final_table5,
+               final_table6, final_table7, final_table8, final_table9, final_table10) 
+
+# Combine all tables
+all_tables <- do.call(rbind, tables)  # 'tables' is a list of all data frames, do.call combines all  data frames into one.
+
+# Summarize metrics per formula
+summary_table <- summarise(
+  group_by(all_tables, formula), # groups by model formula 
+  Count = n(), # returns the number of rows per formula.
+  Avg_TestAcc  = round(mean(`Test Accuracy`, na.rm = TRUE),2),
+  Avg_Gap      = round(abs(mean(`Train Accuracy` - `Test Accuracy`, na.rm = TRUE)),2),
+  Avg_McFadden = round(mean(`McFadden R2`, na.rm = TRUE),2),
+  SD_McFadden   = round(sd(`McFadden R2`, na.rm = TRUE),2)
+)
+
+# Sort by Avg_TestAcc (descending)
+summary_table <- summary_table[order(-summary_table$Count ,-summary_table$Avg_McFadden), ]
+summary_table <- as.data.frame(summary_table[1:15, ]) # keeps only top 15
+
+# Print nicely in R Markdown
+colnames(summary_table) <- c(
+  "Formula",
+  "Count",
+  "Average Test Accuracy",
+  "Average Train-Test Gap",
+  "Average McFadden R²",
+  "McFadden R² SD"
+)
+
+knitr::kable(summary_table, caption = "Summary of Model Performance", row.names = FALSE)
+```
+
+# Chosen model with external validation and prediction
+``` {r Chosen model train, echo = FALSE, results='asis'}
+set.seed(1011)
+
+train_index <- createDataPartition(Deuter$class, p = 0.75, list = FALSE)
+
+Train.data11 <- Deuter[train_index, ]
+Test.data11 <- Deuter[-train_index, ]
+
+cat("### Test data as a result of random sampling\n")
+
+rows <- rownames(Test.data11) 
+cat(paste0(rows, collapse = ", "))
+
+# Use the first ranked ordinal model
+test.form <- summary_table[1, 1]
+
+# Define starting coefficients
+num.of.vars <- stringi::stri_count(test.form, fixed = '+')
+start <- c(rep(0, num.of.vars + 2), 1)
+
+# Train model
+test <- fit_polr(formula = test.form, data = Train.data11)
+
+cat("\n\n")
+cat("**5-fold cross-validation**\n\n")
+CV5 <- cv_classification(Train.data11[1:(ncol(Train.data11)-1)], test.form, ordinal = TRUE,k = 5, 
+                         n.iter = 200, seed = 100)
+round(CV5$overall_mean_accuracy*100,2)
+
+cat("\n\n")
+cat("**Leave one out cross-validation**\n\n")
+LOO <- cv_classification(Train.data11[1:(ncol(Train.data11)-1)], test.form, ordinal = TRUE,k = "loo", 
+                         n.iter = 1, seed = 100)
+round(LOO$overall_mean_accuracy*100,2)
+
+```
+
+``` {r plot Train, echo = FALSE, results='asis'}
+cat("###Train\n")
+
+# Display model information and confusion matrix plot
+model.info <- mod.info(test, Train.data11, TRUE, TRUE)
+
+# Classification table plot
+confusion_matrix <- ct_plot(model.info$class.table, 
+                            plot.title = 'Training Set', 
+                            conformation = '1. 1st Place')
+
+confusion_matrix$plot
+
+# Prediction probability heatmap
+prob.heatmap(test, Train.data11, 
+             plot.title = 'Training Set', 
+             conformation = '1. 1st Place')
+
+
+# Test Set ----------------------------------------------------------------
+cat("###Test\n")
+
+# Evaluate the model on the test set
+model.info <- mod.info(test, Test.data11, FALSE, FALSE)
+
+# Classification table plot
+confusion_matrix <- ct_plot(model.info$class.table, 
+                            plot.title = 'Test Set', 
+                            conformation = 'Best model in random')
+
+confusion_matrix$plot
+
+
+# Prediction probability heatmap
+prob.heatmap(test, Test.data11, 
+             plot.title = 'Test Set', 
+             conformation = 'Best model in random')
+cat("\n\n")
+cat("**External validation**\n\n")
+
+ExternalData <- read.csv('External_Validation_Data.csv')
+row.names(ExternalData) <- ExternalData[,1]
+ExternalData <- ExternalData[,-1]
+ExternalData[,ncol(ExternalData)] <- as.factor(ExternalData[,ncol(ExternalData)])
+
+
+# Evaluate the model on the external validation set
+model.info <- mod.info(test, ExternalData, FALSE)
+
+# Classification table plot
+confusion_matrix <- ct_plot(model.info$class.table, 
+                            plot.title = 'External Validation', 
+                            conformation = 'Best model in random')
+
+confusion_matrix$plot
+
+
+# Prediction probability heatmap
+prob.heatmap(test, ExternalData, 
+             plot.title = 'External Validation', 
+             conformation = 'Best model in random')
+cat("\n\n")
+cat("**Predictions**\n\n")
+
+PredData <- read.csv('Predicting_New_Substrates_Data.csv')
+row.names(PredData) <- PredData[,1]
+PredData <- PredData[,-1]
+
+knitr::kable(cbind(predict(test, PredData, 'probs') * 100,
+      predicted_class = predict(test, PredData, 'class')))
+```

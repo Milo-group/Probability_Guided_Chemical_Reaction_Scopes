@@ -1,7 +1,5 @@
 This folder contains five subfolders:  
-
    
-
 **3-class ordinal - Published**  
 Contains the published multinomial model from the manuscript containing only three reaction condition classes.  
   

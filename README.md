@@ -12,7 +12,7 @@ These folders contain the data from the manuscript and all analyses that appear 
 
 Another subfolder is:
 
-- **Extra_CaseStudies**  
+- **Extra case studies**  
   Contains data for other cases we modeled, which appear in the SI.  
 
 ---

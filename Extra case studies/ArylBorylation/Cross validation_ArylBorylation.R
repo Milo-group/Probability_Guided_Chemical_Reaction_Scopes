@@ -129,7 +129,7 @@ cv_classification <- function(data,
 
 # Aryl Borylation ---------------------------------------------------------
 # Load data
-ArylBorylation <- read.csv('ArylBorylation_fromLR/Data/Doyle_data_organized_for_classification.csv')
+ArylBorylation <- read.csv('Data/Stevens_data_organized_for_classification.csv')
 rownames(ArylBorylation) <- ArylBorylation[,162]
 ArylBorylation <- ArylBorylation[,-c(27,28,159:164)] # Removes names and smiles
 ArylBorylation <- ArylBorylation[,-c(116,117)] #removel of all zero column

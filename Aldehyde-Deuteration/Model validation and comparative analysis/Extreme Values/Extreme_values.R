@@ -237,13 +237,13 @@ round(cbind(pca_var_percent, cum_var_percent), 1)
 
 "
      pca_var_percent cum_var_percent
-PC1             34.0            34.0
-PC2             21.6            55.6
-PC3             14.9            70.5
-PC4              8.9            79.3
-PC5              6.5            85.8
-PC6              4.2            90.0
-PC7              3.6            93.6
+PC1             33.4            33.4
+PC2             22.0            55.3
+PC3             15.4            70.7
+PC4              9.1            79.9
+PC5              6.6            86.4
+PC6              4.4            90.9
+PC7              3.1            93.9
 ...
 "
 
@@ -280,18 +280,18 @@ knitr::kable(fit_models_with_accuracy(models, train_data, normal_test_data))
 knitr::kable(fit_models_with_accuracy(models, train_data, extreme_data))
 
 "
-|formula                                                 | McFadden R2| Train Accuracy| Test Accuracy|  Extreme Accuracy|
-|:-------------------------------------------------------|-----------:|--------------:|-------------:|-----------------:|
-|`class` ~ `-2-3-` + `dip_y` + `Dist(2, 7)` + `NPA_1`    |       0.624|          85.37|          87.5|             83.33|
-|`class` ~ `-2-3-` + `dip_y` + `NPA_1` + `diff 2 3`      |       0.621|          85.37|          87.5|             83.33|
-|`class` ~ `-2-3-` + `dip_y` + `NPA_3` + `diff 1 2`      |       0.621|          87.80|          87.5|             83.33|
-|`class` ~ `-2-3-` + `dip_y` + `Dist(2, 7)` + `diff 1 2` |       0.616|          87.80|          87.5|             83.33|
-|`class` ~ `dip_y` + `NPA_1` + `NPA_3` + `NPA_7`         |       0.601|          80.49|         100.0|             83.33|
-|`class` ~ `-2-3-` + `dip_y` + `NPA_1` + `NPA_3`         |       0.600|          85.37|         100.0|             83.33|
-|`class` ~ `-2-3-` + `Total` + `Dist(2, 7)` + `NPA_1`    |       0.596|          90.24|          87.5|             66.67|
-|`class` ~ `-2-3-` + `Total` + `NPA_1` + `NPA_2`         |       0.596|          82.93|          87.5|             66.67|
-|`class` ~ `-2-3-` + `dip_y` + `NPA_1` + `NPA_2`         |       0.594|          82.93|          87.5|             83.33|
-|`class` ~ `-2-3-` + `dip_y` + `Dist(2, 3)` + `NPA_1`    |       0.592|          82.93|          87.5|             83.33|
+|formula                                             | McFadden R2| Train Accuracy| Test Accuracy| Extreme Accuracy|
+|:---------------------------------------------------|-----------:|--------------:|-------------:|----------------:|
+|`class` ~ `dip_y` + `dip_z` + `diff 2 3` + `loc.B5` |       0.615|          82.93|         85.71|            71.43|
+|`class` ~ `dip_y` + `NPA_3` + `diff 1 2` + `loc.B5` |       0.588|          82.93|        100.00|            71.43|
+|`class` ~ `dip_y` + `dip_z` + `diff 2 7` + `loc.B5` |       0.586|          75.61|         71.43|            71.43|
+|`class` ~ `dip_y` + `NPA_1` + `NPA_3` + `loc.B5`    |       0.571|          80.49|        100.00|            71.43|
+|`class` ~ `-2-3-` + `dip_y` + `NPA_3` + `diff 1 2`  |       0.569|          85.37|        100.00|            71.43|
+|`class` ~ `dip_y` + `dip_z` + `NPA_2` + `loc.B5`    |       0.562|          80.49|         85.71|            85.71|
+|`class` ~ `-2-3-` + `dip_y` + `NPA_1` + `NPA_3`     |       0.559|          85.37|        100.00|            71.43|
+|`class` ~ `-2-3-` + `dip_x` + `dip_y` + `NPA_1`     |       0.558|          80.49|        100.00|            85.71|
+|`class` ~ `dip_y` + `NPA_3` + `NPA_7` + `diff 1 2`  |       0.558|          82.93|        100.00|            71.43|
+|`class` ~ `dip_x` + `dip_y` + `diff 1 2` + `loc.B5` |       0.556|          80.49|         85.71|            85.71|
 "
 
 # Preformance of chosen model in our original classification:
@@ -302,13 +302,13 @@ start <- c(rep(0, num.of.vars + 2), 1)
 test <- fit_polr(formula = test.form, data = train_data)
 
 mod.info(test, train_data, FALSE, FALSE)$McFadden
-"0.624"
+"0.496"
 mod.info(test, train_data, FALSE, FALSE)$accuracy
-"85.36585"
+"80.4878"
 mod.info(test, normal_test_data, FALSE, FALSE)$accuracy
-"87.5"
+"85.71429"
 mod.info(test, extreme_data, FALSE, FALSE)$accuracy
-"83.33333"
+"85.71429"
 
 # --------------- #
 # --SimiSampler-- #

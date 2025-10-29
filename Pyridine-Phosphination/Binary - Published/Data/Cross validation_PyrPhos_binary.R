@@ -134,7 +134,7 @@ cv_classification <- function(data,
 #----------------#
 
 # Import training data from a CSV file
-data_bin <- data.frame(data.table::fread('Halogenation through phosphination/Binary/Training_Data_rdkit_stereoelectronic.csv'), check.names = F)
+data_bin <- data.frame(data.table::fread('Training_Data_rdkit_stereoelectronic.csv'), check.names = F)
 
 # Set the first column as row names
 row.names(data_bin) <- data_bin[,1]  
@@ -178,61 +178,3 @@ LOO <- cv_classification(Train.data,test.form, ordinal = FALSE,k = "loo",
 
 round(LOO$overall_mean_accuracy*100,2)
 "[1] 73.91"
-
-#---------------------#
-#---  Multinomial ----#
-#---------------------#
-
-# Import training data from a CSV file
-data_bin <- data.frame(data.table::fread("Halogenation through phosphination/3-class ordinal/Training_Data_rdkit_stereoelectronic.csv")) 
-
-# Set the first column as row names
-row.names(data_bin) <- data_bin[,1]  
-data_bin <- data_bin[,-1]  # Remove the first column after setting row names
-
-# Convert the 'class' column to a factor
-data_bin$class <- as.factor(data_bin$class)  
-
-# Convert the first 50 columns to numeric values
-data_bin[,c(1:50)] <- as.numeric(as.matrix(data_bin[,c(1:50)]))  
-
-# Convert columns 51 to 64 to factors after converting to numeric
-for (i in 51:64) data_bin[,i] <- as.factor(as.numeric(data_bin[,i]))
-
-# Add a 'flag' column to sequentially number the rows
-data_bin <- plyr::mutate(data_bin, flag = seq(1,nrow(data_bin)))
-
-# Sample from group 1 using simi.sampler
-one <- simi.sampler(data_bin, 1)
-
-# Sample 21 molecules from group 2
-two <- simi.sampler(data_bin, 2, sample.size = 21)
-
-# Sample from group 3 using simi.sampler
-three <- simi.sampler(data_bin, 3)
-
-# Combine the similarities from groups 1, 2, and 3 into one vector
-uni_similarties <- c(one, 
-                     two, 
-                     three)
-
-# Train models on the subset of data corresponding to the combined similarities
-test.form <- "`class` ~ `Dist_.P.C._P` + `NPA_6_SM` + `para_SM`"
-
-# Define training data from the subset of similarities
-Train.Data <- data_bin[uni_similarties, ]
-
-# Define test data from the remaining rows not in the similarities set
-Test.Data <- data_bin[-uni_similarties, ]
-
-CV7 <- cv_classification(Train.Data, test.form, ordinal = TRUE,k = 7, 
-                         n.iter = 200, seed = 100)
-
-round(CV7$overall_mean_accuracy*100,2)
-"[1] 84.63"
-
-# Leave-one-out cross-validation
-LOO <- cv_classification(Train.Data,test.form, ordinal = FALSE,k = "loo", 
-                         n.iter = 1, seed = 100)
-round(LOO$overall_mean_accuracy*100,2)
-"[1] 85.71"

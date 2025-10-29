@@ -131,7 +131,7 @@ cv_classification <- function(data,
 # Deoxyfluorination 3-Cl sulfonyl ----------------------------------------
 
 # Load data
-ClSulfonyl <- read.csv('Deoxyfluorination/Data_noBase/Sulfonyl_3-Cl_Final.csv')
+ClSulfonyl <- read.csv('Data_noBase/Sulfonyl_3-Cl_Final.csv')
 rownames(ClSulfonyl) <- ClSulfonyl[,2]
 ClSulfonyl <- ClSulfonyl[,-c(1,2,82)] # Removes names and inchies
 
@@ -190,7 +190,7 @@ round(LOO$overall_mean_accuracy*100,2)
 # Deoxyfluorination Pyfluoro sulfonyl -----------------------------------------
 
 # Load data
-PyfluoroSulfonyl <- read.csv('Deoxyfluorination/Data_noBase/Sulfonyl_pyfluoro_Final.csv')
+PyfluoroSulfonyl <- read.csv('Data_noBase/Sulfonyl_pyfluoro_Final.csv')
 rownames(PyfluoroSulfonyl) <- PyfluoroSulfonyl[,2]
 PyfluoroSulfonyl <- PyfluoroSulfonyl[,-c(1,2,82)] # Removes names and inchies
 
@@ -251,7 +251,7 @@ round(LOO$overall_mean_accuracy*100,2)
 # ============ #
 
 # Load data
-PyfluoroSulfonyl <- read.csv('Deoxyfluorination/Data_noBase/Sulfonyl_pyfluoro_Binary_NoBase_Final.csv')
+PyfluoroSulfonyl <- read.csv('Data_noBase/Sulfonyl_pyfluoro_Binary_NoBase_Final.csv')
 rownames(PyfluoroSulfonyl) <- PyfluoroSulfonyl[,2]
 PyfluoroSulfonyl <- PyfluoroSulfonyl[,-c(1,2,82)] # Removes names and inchies
 
@@ -296,7 +296,7 @@ round(LOO$overall_mean_accuracy*100,2)
 # ================= #
 
 # Load data
-PyfluoroSulfonyl <- read.csv('Deoxyfluorination/Data_noBase/Sulfonyl_pyfluoro_Multi_NoBase_Final.csv')
+PyfluoroSulfonyl <- read.csv('Data_noBase/Sulfonyl_pyfluoro_Multi_NoBase_Final.csv')
 rownames(PyfluoroSulfonyl) <- PyfluoroSulfonyl[,2]
 PyfluoroSulfonyl <- PyfluoroSulfonyl[,-c(1,2,78)] # Removes names and inchies
 
@@ -347,7 +347,7 @@ round(LOO$overall_mean_accuracy*100,2)
 # Deoxyfluorination 3-CF3 sulfonyl ----------------------------------------
 
 # Load data
-CF3Sulfonyl <- read.csv('Deoxyfluorination/Data_noBase/Sulfonyl_3-CF3_Final.csv')
+CF3Sulfonyl <- read.csv('Data_noBase/Sulfonyl_3-CF3_Final.csv')
 rownames(CF3Sulfonyl) <- CF3Sulfonyl[,2]
 CF3Sulfonyl <- CF3Sulfonyl[,-c(1,2,82)] # Removes names and inchies
 
@@ -407,7 +407,7 @@ round(LOO$overall_mean_accuracy*100,2)
 # Deoxyfluorination 3-NO2 sulfonyl -----------------------------------------
 
 # Load data
-NO2Sulfonyl <- read.csv('Deoxyfluorination/Data_noBase/Sulfonyl_3-NO2_Final.csv')
+NO2Sulfonyl <- read.csv('Data_noBase/Sulfonyl_3-NO2_Final.csv')
 rownames(NO2Sulfonyl) <- NO2Sulfonyl[,2]
 NO2Sulfonyl <- NO2Sulfonyl[,-c(1,2,82)] # Removes names and inchies
 
@@ -467,7 +467,7 @@ round(LOO$overall_mean_accuracy*100,2)
 # Deoxyfluorination PBSF sulfonyl -------------------------------------
 
 # Load data
-PBSFSulfonyl <- read.csv('Deoxyfluorination/Data_noBase/Sulfonyl_PBSF_Final.csv')
+PBSFSulfonyl <- read.csv('Data_noBase/Sulfonyl_PBSF_Final.csv')
 rownames(PBSFSulfonyl) <- PBSFSulfonyl[,2]
 PBSFSulfonyl <- PBSFSulfonyl[,-c(1,2,81)] # Removes names and inchies
 

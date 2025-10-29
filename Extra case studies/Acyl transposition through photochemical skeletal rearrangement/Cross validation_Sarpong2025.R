@@ -130,7 +130,7 @@ cv_classification <- function(data,
 # Skeletal Editing --------------------------------------------------------
 
 # Load data
-Sarpong2025 <- read.csv('Sarpong2025/Data/computed_descriptors_Sarpong2025.csv')
+Sarpong2025 <- read.csv('Data/computed_descriptors_Sarpong2025.csv')
 rownames(Sarpong2025) <- Sarpong2025[,2]
 Sarpong2025 <- Sarpong2025[,-c(1,2,3)]
 

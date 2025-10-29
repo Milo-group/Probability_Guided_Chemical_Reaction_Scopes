@@ -130,7 +130,7 @@ cv_classification <- function(data,
 # Hydrogen Isotope Exchange -----------------------------------------------
 
 # Import training data from CSV and convert it into a data frame
-data50 <- data.frame(data.table::fread('HIE/Training_Data.csv')) 
+data50 <- data.frame(data.table::fread('Training_Data.csv')) 
 row.names(data50) <- data50[,1]  # Set the first column as row names
 data50 <- data50[,-1]  # Remove the first column after setting row names
 
@@ -143,7 +143,7 @@ data50 <- plyr::mutate(data50, flag = seq(1,nrow(data50)))
 ## Sampler data
 
 # Import sampling data from CSV and convert to data frame
-sampl.dat <- data.table::fread('HIE/Sampling_Data.csv') 
+sampl.dat <- data.table::fread('Sampling_Data.csv') 
 sampl.dat <- data.frame(sampl.dat)
 row.names(sampl.dat) <- sampl.dat[,1]  # Set the first column as row names
 sampl.dat <- sampl.dat[,-1]  # Remove the first column after setting row names

@@ -130,7 +130,7 @@ cv_classification <- function(data,
 # Deuteration -------------------------------------------------------------
 
 # Load data from a CSV file into a data frame
-data <- data.frame(data.table::fread('Deuteration/Training_Data.csv'), check.names = F)
+data <- data.frame(data.table::fread('Training_Data.csv'), check.names = F)
 
 # Clean and organize data
 row.names(data) <- data[,2]  # Set the second column as row names

@@ -7,7 +7,7 @@ remotes::install_github('barkais/rxn.cond.class', force = TRUE)
 library('rxn.cond.class')
 
 # Load data
-Sarpong2025 <- read.csv('computed_descriptors_Sarpong2025.csv')
+Sarpong2025 <- read.csv('Data/computed_descriptors_Sarpong2025.csv')
 rownames(Sarpong2025) <- Sarpong2025[,2]
 Sarpong2025 <- Sarpong2025[,-c(1,2,3)]
 

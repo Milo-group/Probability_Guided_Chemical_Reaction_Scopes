@@ -11,7 +11,7 @@ library('rxn.cond.class')
 # ====================================================================== #
 
 # Load data
-ClSulfonyl <- read.csv('Data_noBase//Sulfonyl_3-Cl_Final.csv')
+ClSulfonyl <- read.csv('Data_noBase/Sulfonyl_3-Cl_Final.csv')
 rownames(ClSulfonyl) <- ClSulfonyl[,2]
 ClSulfonyl <- ClSulfonyl[,-c(1,2,82)] # Removes names and inchies
 
@@ -112,7 +112,7 @@ prob.heatmap(test, Test.data,
 # ======================================================================= #
 
 # Load data
-PyfluoroSulfonyl <- read.csv('Data_noBase//Sulfonyl_pyfluoro_Final.csv')
+PyfluoroSulfonyl <- read.csv('Data_noBase/Sulfonyl_pyfluoro_Final.csv')
 rownames(PyfluoroSulfonyl) <- PyfluoroSulfonyl[,2]
 PyfluoroSulfonyl <- PyfluoroSulfonyl[,-c(1,2,82)] # Removes names and inchies
 
@@ -209,7 +209,7 @@ prob.heatmap(test, Test.data,
              conformation = '2. 2nd Place')
 
 # ===================================================================== #
-# Pyfluorosulfonyl_Binary -----------------------------------------------
+# Pyfluoro Sulfonyl_Binary ----------------------------------------------
 # ===================================================================== #
 
 # Load data
@@ -291,7 +291,7 @@ prob.heatmap(test, Test.data,
              plot.title = 'Test Set', 
              conformation = '1. 1st Place')
 # ===================================================================== #
-# Pyfluorosulfonyl_Multi ------------------------------------------------
+# Pyfluoro sulfonyl_Multi -----------------------------------------------
 # ===================================================================== #
 
 # Load data

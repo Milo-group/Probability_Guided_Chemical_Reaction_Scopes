@@ -123,23 +123,6 @@ start <- c(rep(0, num.of.vars + 2), 1)
 
 # Train model
 test <- fit_polr(formula = test.form, data = Train.set)
-
-# Cross-validation (smallest-group's-fold)
-k.fold.log.iter(formula = test.form, 
-                data = Train.set, 
-                ordinal = TRUE, 
-                stratify = TRUE, 
-                iterations = 20, 
-                verbose = TRUE)
-
-# Leave-one-out cross-validation
-k.fold.log.iter(formula = test.form, 
-                data = Train.set, 
-                ordinal = TRUE, 
-                folds = nrow(Train.set), 
-                stratify = FALSE, 
-                iterations = 1, 
-                verbose = TRUE)
 ```
 
 #### Model Information and Visualization (Training Set)

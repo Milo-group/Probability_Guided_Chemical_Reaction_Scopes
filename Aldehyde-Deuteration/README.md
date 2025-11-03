@@ -6,6 +6,9 @@ All relevant ```*.csv``` files used for modeling and two ```*.R``` files for rep
 **Model reports**  
 PDF files containing various model reports, with and without ordinal implementation, and with and without similarity under-sampling.  
   
+**Model validation and comparative analysis**  
+This folder contains materials for validating and comparing model performances, including analyses of different models (kNN, SVM, NN, RF), robustness checks using convex hull methods, evaluations on extreme values, and experiments with random sampling approaches.  
+  
 **Psy-Chem**  
 Data related to the expert survey conducted to determine whether classification is necessary.  
   

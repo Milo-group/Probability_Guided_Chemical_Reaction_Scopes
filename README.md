@@ -208,23 +208,6 @@ test <- nnet::multinom(test.form,
                        data = Train.set,
                        maxit = 2000, 
                        trace = FALSE)
-
-# Cross-validation (smallest-group's-fold)
-k.fold.log.iter(formula = test.form, 
-                data = Train.set, 
-                ordinal = FALSE, 
-                stratify = TRUE, 
-                iterations = 20, 
-                verbose = TRUE)
-
-# Leave-one-out cross-validation
-k.fold.log.iter(formula = test.form, 
-                data = Train.set, 
-                ordinal = FALSE, 
-                folds = nrow(Train.set), 
-                stratify = FALSE, 
-                iterations = 1, 
-                verbose = TRUE)
 ```
 
 #### Model Information and Visualization (Training Set)

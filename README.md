@@ -4,9 +4,9 @@ This GitHub repository contains all data connected to our paper **"Probability G
 
 The main folders are:
 
-- **Aldehyde-Deuteration**  
-- **Hydrogen Isotope Exchange (HIE)**  
-- **Pyridine-Phosphination**  
+- **Aldehyde-Deuteration** ACS Catal. 2021, 11, 23, 14561–14569. <https://doi.org/10.1021/acscatal.1c04583>  
+- **Hydrogen Isotope Exchange (HIE)**  ChemRxiv. 2023. <https://doi.org/10.26434/chemrxiv-2023-bmg14>  
+- **Pyridine-Phosphination** J. Am. Chem. Soc. 2020, 142, 25, 11295–11305. <https://doi.org/10.1021/jacs.0c04674>  
 
 These folders contain the data from the manuscript and all analyses that appear either in the manuscript or the Supporting Information (SI).  
 

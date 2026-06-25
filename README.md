@@ -17,6 +17,24 @@ Another subfolder is:
 
 ---
 
+## A guide for starters
+
+If you are **not familiar with R or reaction-scope modeling**, begin with the folder **[Getting Started Example](Getting%20Started%20Example/)**. It contains:
+
+- A **tiny dummy dataset** (made-up descriptor values, 30 molecules)
+- Two scripts that mirror the real workflow in `Aldehyde-Deuteration/Data/`
+- A short [README](Getting%20Started%20Example/README.md) with step-by-step instructions
+
+**Quick start** (after installing `rxn.cond.class`):
+
+1. In R, set your working directory to `Getting Started Example/Data`
+2. Run `source("Model_Construction_Example.R")`, which loads data, finds a model, evaluates it, predicts new molecules
+3. Optionally run `source("Cross_validation_Example.R")`, which checks whether accuracy is stable
+
+When that makes sense, repeat the same steps on the real data in `Aldehyde-Deuteration/Data/`.
+
+---
+
 # General Guide for Using the Classification Code: Classify Chemical Reaction Conditions with the R Package `rxn.cond.class`
 
 Below is a general guide for using the classification code provided in this repository. 

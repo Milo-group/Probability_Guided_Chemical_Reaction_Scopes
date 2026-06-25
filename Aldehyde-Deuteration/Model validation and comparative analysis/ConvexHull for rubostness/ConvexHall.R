@@ -1,6 +1,12 @@
 library('rxn.cond.class')
 library(caret)
 
+# Make all CSV paths robust to being sourced from other working directories.
+script_dir <- dirname(normalizePath(if (is.null(sys.frame(1)$ofile)) "." else sys.frame(1)$ofile))
+training_csv <- file.path(script_dir, "Training_Data.csv")
+external_csv <- file.path(script_dir, "External_Validation_Data.csv")
+predict_csv <- file.path(script_dir, "Predicting_New_Substrates_Data.csv")
+
 # Train and test function to add to the McFadden values -------------------
 
 fit_models_with_accuracy <- function(models_df, train_data, test_data) {
@@ -45,7 +51,7 @@ fit_models_with_accuracy <- function(models_df, train_data, test_data) {
 # Train-test check --------------------------------------------------------
 
 # Load data from a CSV file into a data frame
-data <- data.frame(data.table::fread('Training_Data.csv'), check.names = F)
+data <- data.frame(data.table::fread(training_csv), check.names = F)
 
 # Clean and organize data
 row.names(data) <- data[,2]  # Set the second column as row names
@@ -152,7 +158,7 @@ Combination of the two tables gives the following table:
 # ----------------#
 
 # Load data from a CSV file into a data frame
-data <- data.frame(data.table::fread('Training_Data.csv'), check.names = F)
+data <- data.frame(data.table::fread(training_csv), check.names = F)
 
 # Clean and organize data
 "For training"
@@ -160,8 +166,8 @@ row.names(data) <- data[,2]  # Set the second column as row names
 data$class <- as.factor(data$class)  # Convert the 'class' column to a factor
 data <- data[,-c(1:2)]  # Remove the first and second columns (name and tag)
 
-ExternalVal <- data.frame(data.table::fread('External_Validation_Data.csv'), check.names = F)
-Predictions <- data.frame(data.table::fread('Predicting_New_Substrates_Data.csv'), check.names = F)
+ExternalVal <- data.frame(data.table::fread(external_csv), check.names = F)
+Predictions <- data.frame(data.table::fread(predict_csv), check.names = F)
 Predictions$class <- c("1","3","1","2")
 
 "For test"

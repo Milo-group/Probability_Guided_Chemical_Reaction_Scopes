@@ -5,10 +5,16 @@ remotes::install_github('https://github.com/barkais/rxn.cond.class.git')
 
 library('rxn.cond.class')
 
+# Make all CSV paths robust to being sourced from other working directories.
+script_dir <- dirname(normalizePath(if (is.null(sys.frame(1)$ofile)) "." else sys.frame(1)$ofile))
+training_csv <- file.path(script_dir, "Training_Data.csv")
+external_csv <- file.path(script_dir, "External_Validation_Data.csv")
+predict_csv <- file.path(script_dir, "Predicting_New_Substrates_Data.csv")
+
 # Deuteration -------------------------------------------------------------
 
 # Load data from a CSV file into a data frame
-data <- data.frame(data.table::fread('Training_Data.csv'), check.names = F)
+data <- data.frame(data.table::fread(training_csv), check.names = F)
 
 # Clean and organize data
 row.names(data) <- data[,2]  # Set the second column as row names
@@ -88,7 +94,7 @@ prob.heatmap(test, Test.data,
 # -- External Validation -- #
 # ------------------------- #
 
-External <- data.frame(data.table::fread('External_Validation_Data.csv'), check.names = F)
+External <- data.frame(data.table::fread(external_csv), check.names = F)
 RN <- External$V1
 External <- External[,-1]
 External$class <- as.factor(External$class)
@@ -112,7 +118,7 @@ prob.heatmap(test, External,
 # ----------------- #
 
 # Load and organize prediction of new substrates data
-Prediction.set <- data.frame(data.table::fread('Predicting_New_Substrates_Data.csv'), check.names = F)
+Prediction.set <- data.frame(data.table::fread(predict_csv), check.names = F)
 RN <- Prediction.set$V1
 Prediction.set <- Prediction.set[,-1]
 row.names(Prediction.set) <- RN

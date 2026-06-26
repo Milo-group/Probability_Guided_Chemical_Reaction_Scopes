@@ -1,0 +1,6 @@
+2BD.xyz	O=Cc1ccccc1
+2BE.xyz	O=Cc1ccccc1OC(F)F
+2BF.xyz	O=Cc1ccc(OC(F)(F)C(F)F)cc1
+2BG.xyz	CSc1ccc(C=O)cc1
+2BH.xyz	CN(C)c1ccc(C=O)cc1
+2BI.xyz	COc1cc(C=O)ccc1O

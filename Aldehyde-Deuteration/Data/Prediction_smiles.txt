@@ -1,0 +1,4 @@
+2BM.xyz	O=Cc1cc(C(F)(F)F)cc(C(F)(F)F)c1
+2BO.xyz	O=Cc1c(O)ccc2ccccc12
+2BS.xyz	O=Cc1c(F)c(F)c(F)c(F)c1F
+2BW.xyz	COc1ccc(C=O)cc1OC

@@ -130,7 +130,7 @@ cv_classification <- function(data,
 # Deuteration -------------------------------------------------------------
 
 # Load data from a CSV file into a data frame
-data <- data.frame(data.table::fread('Training_Data.csv'), check.names = F)
+data <- data.frame(data.table::fread(training_csv), check.names = F)
 
 # Clean and organize data
 row.names(data) <- data[,2]  # Set the second column as row names
@@ -171,3 +171,126 @@ LOO <- cv_classification(Train.data, test.form, ordinal = TRUE,k = "loo",
                          n.iter = 200, seed = 10)
 round(LOO$overall_mean_accuracy*100,2)
 "[1] 76.19"
+
+
+# -------------------------------
+# Model report (PDF) generation
+# -------------------------------
+report_dir <- file.path(dirname(script_dir), "Model Reports")
+if (!dir.exists(report_dir)) dir.create(report_dir, recursive = TRUE)
+report_file <- file.path(report_dir, "CrossValidation.ModelReport.Deuteration.trial.pdf")
+
+log_msg(sprintf("Writing cross-validation model report PDF: %s", report_file))
+
+pdf(report_file, width = 11, height = 8.5)
+
+# Accuracy distributions from CV / LOO
+acc_cv_pct <- CV7$results_table$accuracy * 100
+acc_loo_pct <- LOO$results_table$accuracy * 100
+
+par(mar = c(5, 4, 4, 2) + 0.1)
+boxplot(
+  list("CV (k=7)" = acc_cv_pct, "LOO" = acc_loo_pct),
+  main = "Cross-validation accuracy distributions",
+  ylab = "Accuracy (%)",
+  col = c("#4C78A8", "#F58518")
+)
+
+hist(acc_cv_pct, breaks = 20, col = "#4C78A8AA", border = "#4C78A8",
+     main = "CV (k=7) accuracy histogram", xlab = "Accuracy (%)")
+hist(acc_loo_pct, breaks = 20, col = "#F58518AA", border = "#F58518",
+     main = "LOO accuracy histogram", xlab = "Accuracy (%)")
+
+
+# Fit one final model on the full training subset, then create the usual reports.
+final_model <- fit_polr(formula = test.form, data = Train.data)
+
+grid_side_by_side_confusion <- function(confusion_plot, confusion_table, left_title, right_title) {
+  # Draw the confusion plot (left) next to a text table (right) using base `grid`.
+  # This avoids relying on external packages like `gridExtra`.
+  if (!requireNamespace("grid", quietly = TRUE)) stop("`grid` package is required.")
+  
+  # Convert ggplot to grob when needed; otherwise assume it's already a grob.
+  confusion_grob <- confusion_plot
+  if (inherits(confusion_plot, "ggplot")) {
+    if (!requireNamespace("ggplot2", quietly = TRUE)) {
+      stop("`ggplot2` is required to render ct_plot() output.")
+    }
+    confusion_grob <- ggplot2::ggplotGrob(confusion_plot)
+  }
+  
+  tab_mat <- as.matrix(confusion_table)
+  tab_lines <- capture.output(print(tab_mat))
+  tab_label <- paste(tab_lines, collapse = "\n")
+  
+  grid::grid.newpage()
+  grid::pushViewport(grid::viewport(layout = grid::grid.layout(1, 2)))
+  
+  # Left: confusion matrix graphic
+  grid::pushViewport(grid::viewport(layout.pos.row = 1, layout.pos.col = 1))
+  grid::grid.draw(confusion_grob)
+  grid::grid.text(left_title, x = 0.5, y = 0.98, just = "top",
+                  gp = grid::gpar(fontface = "bold", cex = 1.0))
+  grid::popViewport()
+  
+  # Right: numeric confusion matrix table
+  grid::pushViewport(grid::viewport(layout.pos.row = 1, layout.pos.col = 2))
+  grid::grid.text(right_title, x = 0.5, y = 0.98, just = "top",
+                  gp = grid::gpar(fontface = "bold", cex = 1.0))
+  grid::grid.text(tab_label, x = 0.02, y = 0.96, just = "left",
+                  gp = grid::gpar(fontfamily = "mono", cex = 0.65),
+                  default.units = "npc")
+  grid::popViewport()
+  
+  grid::popViewport()
+}
+
+model.info <- mod.info(final_model, Train.data, FALSE, FALSE)
+cm_train <- ct_plot(
+  model.info$class.table,
+  plot.title = "Train Set (for model report)",
+  conformation = "1. 1st Place"
+)
+grid_side_by_side_confusion(
+  confusion_plot = cm_train$plot,
+  confusion_table = model.info$class.table,
+  left_title = "Train confusion matrix",
+  right_title = "Train confusion table"
+)
+
+p_train_hm <- prob.heatmap(
+  final_model,
+  Train.data,
+  plot.title = "Train Set (for model report)",
+  conformation = "1. 1st Place"
+)
+print(p_train_hm)
+
+if (nrow(Test.data) > 0) {
+  model.info <- mod.info(final_model, Test.data, FALSE, FALSE)
+  cm_test <- ct_plot(
+    model.info$class.table,
+    plot.title = "Test Set (for model report)",
+    conformation = "1. 1st Place"
+  )
+  
+  grid_side_by_side_confusion(
+    confusion_plot = cm_test$plot,
+    confusion_table = model.info$class.table,
+    left_title = "Test confusion matrix",
+    right_title = "Test confusion table"
+  )
+
+  p_test_hm <- prob.heatmap(
+    final_model,
+    Test.data,
+    plot.title = "Test Set (for model report)",
+    conformation = "1. 1st Place"
+  )
+  print(p_test_hm)
+}
+
+dev.off()
+log_msg("Cross-validation model report PDF written successfully.")
+
+log_msg("Finished Cross validation_Deuteration.R.")

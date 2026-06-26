@@ -41,7 +41,8 @@ Below is a general guide for using the classification code provided in this repo
 
 `rxn.cond.class` is an R package designed to classify and visualize logistic regression classification models for chemical reaction conditions using both ordinal and non-ordinal models. It includes functionality for similarity-based sampling, model ranking, model evaluation, and heatmap visualization for model performance.
 
-The workflow has four main stages: **install the package → prepare data and search models → fit and evaluate a model → predict on new substrates**. Each code block below corresponds to one step; comments marked **CHANGE** highlight settings you will typically adjust for your own dataset.
+Each code block below corresponds to one step.
+Comments marked **CHANGE** highlight settings you will typically adjust for your own dataset.
 
 ## Installation
 
@@ -71,9 +72,9 @@ For a hands-on walkthrough on a tiny dataset, see **[Getting Started Example](Ge
 
 ### Model Search
 
-Load your training table, clean column names, split molecules into training and test sets using similarity-based sampling, and rank candidate models. The example below uses built-in package data; replace those lines with your own CSV when working on a real case study.
+Load your training table, clean column names, split molecules into training and test sets using similarity-based sampling, and rank candidate models. The example below uses built-in package data. replace those lines with your own CSV when working on a real case study.
 
-**Load and clean training data.** Row names should be molecule IDs; the `class` column must be a factor; descriptor columns remain as numeric predictors.
+**Load and clean training data.**
 
 ```r
 # CHANGE: replace with your CSV path, e.g. data.table::fread("Training_Data.csv")
@@ -88,7 +89,7 @@ data <- data[, -c(1:2)]               # CHANGE: drop name/tag columns (here: col
 **Similarity-based train / test split.** For each class (or pair of classes), `simi.sampler()` picks representative molecules for training. On small datasets, pass `sample.size` so some molecules are left for testing (see Getting Started Example).
 
 ```r
-# CHANGE: class labels (1, 2, 3) must match your data; add sample.size on small tables
+# CHANGE: class labels (1, 2, 3) must match your data. add sample.size on small tables
 one       <- simi.sampler(data, 1)           # class 1 vs itself
 two       <- simi.sampler(data, 2)           # class 2 vs itself
 three     <- simi.sampler(data, 3)           # class 3 vs itself
@@ -99,10 +100,10 @@ two_three <- simi.sampler(data, 2, 3)        # class 2 vs class 3
 similarities <- c(union(one, one_three), union(two, two_three), three)
 ```
 
-**Model search.** `sub_model_log()` ranks logistic models by accuracy. Set `min` / `max` to control how many descriptors each model may use; set `ordinal` to `TRUE` for ordered classes or `FALSE` for unordered classes.
+**Model search.** `sub_model_log()` ranks logistic models by accuracy. Set `min` / `max` to control how many descriptors can be considered in a model. set `ordinal` to `TRUE` for ordered classes or `FALSE` for unordered classes.
 
 ```r
-# CHANGE: min / max = number of descriptors per model; ordinal = TRUE or FALSE
+# CHANGE: min / max = number of descriptors per model. ordinal = TRUE or FALSE
 models.ordinal <- sub_model_log(
   data = data[similarities, ],
   min = 2,           # CHANGE: minimum descriptors (e.g. 2)
@@ -122,7 +123,7 @@ Train.set <- data[similarities, ]
 Test.set  <- data[-similarities, ]
 ```
 
-**Load external validation and prediction tables.** External data have known classes; prediction data do not. Match descriptor column names to the training set.
+**Load external validation and prediction tables.** 
 
 ```r
 # External validation (known labels) — CHANGE: your CSV or package example
@@ -172,7 +173,7 @@ test <- fit_polr(formula = test.form, data = Train.set)
 Summarize accuracy and plot the confusion matrix and probability heatmap on data the model was fit to.
 
 ```r
-# mod.info: 3rd arg = print summary; 4th arg = include class probabilities
+# mod.info: 3rd arg = print summary, 4th arg = include class probabilities
 model.info <- mod.info(test, Train.set, TRUE, TRUE)
 
 # CHANGE: plot.title and conformation are labels for your figures
@@ -195,7 +196,7 @@ prob.heatmap(
 Evaluate on molecules excluded from training by the similarity split. This estimates performance on unseen substrates from the same dataset.
 
 ```r
-# FALSE, FALSE = do not re-print full summary; evaluate on held-out rows only
+# FALSE, FALSE = do not re-print full summary, evaluate on held-out rows only
 model.info <- mod.info(test, Test.set, FALSE, FALSE)
 
 confusion_matrix <- ct_plot(

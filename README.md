@@ -19,9 +19,9 @@ Another subfolder is:
 
 ## A guide for starters
 
-If you are **not familiar with R or reaction-scope modeling**, begin with the folder **[Getting Started Example](Getting%20Started%20Example/)**. It contains:
+If you are not familiar with R or reaction-scope modeling, begin with the folder **[Getting Started Example](Getting%20Started%20Example/)**. It contains:
 
-- A **tiny dummy dataset** (made-up descriptor values, 30 molecules)
+- A **tiny dummy dataset** (made-up descriptor values)
 - Two scripts that mirror the real workflow in `Aldehyde-Deuteration/Data/`
 - A short [README](Getting%20Started%20Example/README.md) with step-by-step instructions
 
@@ -31,18 +31,16 @@ If you are **not familiar with R or reaction-scope modeling**, begin with the fo
 2. Run `source("Model_Construction_Example.R")`, which loads data, finds a model, evaluates it, predicts new molecules
 3. Optionally run `source("Cross_validation_Example.R")`, which checks whether accuracy is stable
 
-When that makes sense, repeat the same steps on the real data in `Aldehyde-Deuteration/Data/`.
-
 ---
 
 # General Guide for Using the Classification Code: Classify Chemical Reaction Conditions with the R Package `rxn.cond.class`
 
 Below is a general guide for using the classification code provided in this repository.
 
-`rxn.cond.class` is an R package designed to classify and visualize logistic regression classification models for chemical reaction conditions using both ordinal and non-ordinal models. It includes functionality for similarity-based sampling, model ranking, model evaluation, and heatmap visualization for model performance.
+`rxn.cond.class` is an R package designed to classify and visualize logistic regression classification models for chemical reaction conditions using both ordinal and non-ordinal models. It includes scripts for similarity-based sampling, model ranking, model evaluation, and heatmap visualization for model performance.
 
 Each code block below corresponds to one step.
-Comments marked **CHANGE** highlight settings you will typically adjust for your own dataset.
+Comments marked **CHANGE** highlight settings you should adjust for your own purpose.
 
 ## Installation
 
@@ -72,7 +70,7 @@ For a hands-on walkthrough on a tiny dataset, see **[Getting Started Example](Ge
 
 ### Model Search
 
-Load your training table, clean column names, split molecules into training and test sets using similarity-based sampling, and rank candidate models. The example below uses built-in package data. replace those lines with your own CSV when working on a real case study.
+Load your training table, clean column names, split molecules into training and internal validation sets using similarity-based sampling, and rank candidate models. The example below uses built-in package data. Replace those lines with your own CSV when working on a real case study.
 
 **Load and clean training data.**
 
@@ -86,7 +84,7 @@ data$class <- as.factor(data$class)   # outcome must be a factor
 data <- data[, -c(1:2)]               # CHANGE: drop name/tag columns (here: cols 1–2)
 ```
 
-**Similarity-based train / test split.** For each class (or pair of classes), `simi.sampler()` picks representative molecules for training. On small datasets, pass `sample.size` so some molecules are left for testing (see Getting Started Example).
+**Similarity-based training / internal validation split.** For each class (or pair of classes), `simi.sampler()` picks representative molecules for training. On small datasets, pass `sample.size` so some molecules are left for internal validation (see Getting Started Example).
 
 ```r
 # CHANGE: class labels (1, 2, 3) must match your data. add sample.size on small tables
@@ -118,7 +116,7 @@ models.non.ordinal <- sub_model_log(
   ordinal = FALSE
 )
 
-# Training and held-out test sets from the similarity split
+# Training and held-out internal validation sets from the similarity split
 Train.set <- data[similarities, ]
 Test.set  <- data[-similarities, ]
 ```
@@ -140,23 +138,15 @@ Prediction.set <- Prediction.set[, -1]
 row.names(Prediction.set) <- RN
 ```
 
-### Ordinal Model Example
+### Fit a model
 
-Ordinal models treat class labels as ordered levels. Use this path when class order is chemically meaningful.
+Choose **ordinal** or **non-ordinal** depending on whether class order is chemically meaningful. Inspect the ranked list, pick a formula, then fit. Both paths store the result in `test`. The evaluation steps below are the same for either.
 
-#### Model Ranking
-
-Inspect the ranked list and pick a row. Row 1 is the top model by the package ranking criteria.
+#### Ordinal (`fit_polr`)
 
 ```r
 knitr::kable(models.ordinal)
-```
 
-#### Training Set
-
-Fit the top-ranked ordinal model with `fit_polr()` (proportional-odds logistic regression).
-
-```r
 # CHANGE: pick model rank (1 = best) or choose a formula from the table above
 test.form <- models.ordinal[1, 1]
 
@@ -164,11 +154,30 @@ test.form <- models.ordinal[1, 1]
 num.of.vars <- stringi::stri_count(test.form, fixed = '+')
 start <- c(rep(0, num.of.vars + 2), 1)
 
-# Fit on the training set
 test <- fit_polr(formula = test.form, data = Train.set)
 ```
 
-#### Model Information and Visualization (Training Set)
+#### Non-ordinal (`nnet::multinom`)
+
+```r
+knitr::kable(models.non.ordinal)
+
+# CHANGE: pick model rank (1 = best)
+test.form <- models.non.ordinal[1, 1]
+
+test <- nnet::multinom(
+  test.form,
+  data = Train.set,
+  maxit = 2000,      # CHANGE: raise if you see convergence warnings
+  trace = FALSE
+)
+```
+
+### Evaluate and predict
+
+After fitting, `test` holds your model. The code below works for both ordinal and non-ordinal models — only change `plot.title` and `conformation` as needed.
+
+#### Training set
 
 Summarize accuracy and plot the confusion matrix and probability heatmap on data the model was fit to.
 
@@ -176,11 +185,10 @@ Summarize accuracy and plot the confusion matrix and probability heatmap on data
 # mod.info: 3rd arg = print summary, 4th arg = include class probabilities
 model.info <- mod.info(test, Train.set, TRUE, TRUE)
 
-# CHANGE: plot.title and conformation are labels for your figures
 confusion_matrix <- ct_plot(
   model.info$class.table,
-  plot.title = 'Training Set',
-  conformation = '1. 1st Place'   # CHANGE: short model label for the plot
+  plot.title = 'Training Set',       # CHANGE: figure title
+  conformation = '1. 1st Place'      # CHANGE: short model label for the plot
 )
 confusion_matrix$plot
 
@@ -191,27 +199,26 @@ prob.heatmap(
 )
 ```
 
-#### Test Set
+#### Internal validation set
 
-Evaluate on molecules excluded from training by the similarity split. This estimates performance on unseen substrates from the same dataset.
+Evaluate on molecules excluded from training by the similarity split.
 
 ```r
-# FALSE, FALSE = do not re-print full summary, evaluate on held-out rows only
 model.info <- mod.info(test, Test.set, FALSE, FALSE)
 
 confusion_matrix <- ct_plot(
   model.info$class.table,
-  plot.title = 'Test Set',          # CHANGE: figure title
+  plot.title = 'Internal Validation Set',
   conformation = '1. 1st Place'
 )
 confusion_matrix$plot
 
 prob.heatmap(test, Test.set,
-             plot.title = 'Test Set',
+             plot.title = 'Internal Validation Set',
              conformation = '1. 1st Place')
 ```
 
-#### External Validation
+#### External validation
 
 Evaluate on an independent dataset collected separately from the training table.
 
@@ -230,100 +237,15 @@ prob.heatmap(test, External.set,
              conformation = '1. 1st Place')
 ```
 
-#### Prediction of New Substrates
+#### Prediction of new substrates
 
 Predict class probabilities (%) and the most likely class for molecules without labels.
 
 ```r
 knitr::kable(cbind(
-  predict(test, Prediction.set, 'probs') * 100,   # class probabilities (%)
+  predict(test, Prediction.set, 'probs') * 100,
   predicted_class = predict(test, Prediction.set, 'class')
 ))
-```
-
-### Non-ordinal Model Example
-
-Non-ordinal models treat classes as unordered categories. Use this path when class order is not meaningful or you want to compare against the ordinal approach.
-
-#### Model Ranking
-
-View the ranked non-ordinal models and choose which formula to fit.
-
-```r
-knitr::kable(models.non.ordinal)
-```
-
-#### Training Set
-
-Fit a multinomial logistic regression with `nnet::multinom()`. Increase `maxit` if the optimizer fails to converge.
-
-```r
-# CHANGE: pick model rank (1 = best)
-test.form <- models.non.ordinal[1, 1]
-
-test <- nnet::multinom(
-  test.form,
-  data = Train.set,
-  maxit = 2000,      # CHANGE: raise if you see convergence warnings
-  trace = FALSE
-)
-```
-
-#### Model Information and Visualization (Training Set)
-
-Same plots as the ordinal workflow: confusion matrix and probability heatmap on the training set.
-
-```r
-model.info <- mod.info(test, Train.set, TRUE, TRUE)
-
-confusion_matrix <- ct_plot(
-  model.info$class.table,
-  plot.title = 'Training Set',
-  conformation = '1. 1st Place'
-)
-confusion_matrix$plot
-
-prob.heatmap(test, Train.set,
-             plot.title = 'Training Set',
-             conformation = '1. 1st Place')
-```
-
-#### Test Set
-
-Held-out performance for the non-ordinal model.
-
-```r
-model.info <- mod.info(test, Test.set, FALSE, FALSE)
-
-confusion_matrix <- ct_plot(
-  model.info$class.table,
-  plot.title = 'Test Set',
-  conformation = '1. 1st Place'
-)
-confusion_matrix$plot
-
-prob.heatmap(test, Test.set,
-             plot.title = 'Test Set',
-             conformation = '1. 1st Place')
-```
-
-#### External Validation
-
-Performance on the independent external validation set.
-
-```r
-model.info <- mod.info(test, External.set, FALSE)
-
-confusion_matrix <- ct_plot(
-  model.info$class.table,
-  plot.title = 'External Validation',
-  conformation = '1. 1st Place'
-)
-confusion_matrix$plot
-
-prob.heatmap(test, External.set,
-             plot.title = 'External Validation',
-             conformation = '1. 1st Place')
 ```
 
 ## License

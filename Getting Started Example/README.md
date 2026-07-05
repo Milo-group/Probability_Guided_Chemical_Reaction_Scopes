@@ -85,4 +85,4 @@ Those scripts use the real deuteration dataset and the same steps, with more des
 
 ## Typical runtime
 
-On the dummy data, each script should finishe in under one minute.
+On the dummy data, each script should finish in under one minute.

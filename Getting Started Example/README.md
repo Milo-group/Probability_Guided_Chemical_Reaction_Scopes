@@ -78,14 +78,14 @@ This runs 5-fold cross-validation (10 repeats) and leave-one-out validation on t
 
 When you are comfortable with this example, open **`Aldehyde-Deuteration/Data/`** and run the same two scripts there:
 
-- `Model_Construction_Example.R`
+- `Model Construction_Deuteration.R`
 - `Cross validation_Deuteration.R`
 
 Those scripts use the real deuteration dataset and the same steps, with more descriptors and longer model searches.
 
 Alternatively, you can replace the input CSV files with your own data and rerun the following scripts:
 
-- `Model Construction_Deuteration.R`
+- `Model_Construction_Example.R`
 - `Cross_validation_Example.R`
 
 As long as the file names and table structure remain unchanged, the scripts should run without any additional modifications.

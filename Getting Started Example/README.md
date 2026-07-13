@@ -76,12 +76,13 @@ This runs 5-fold cross-validation (10 repeats) and leave-one-out validation on t
 
 ## Moving to real data
 
-When you are comfortable with this example, open **`Aldehyde-Deuteration/Data/`** and run the same two scripts there:
+Once you are comfortable with this example, replace the input CSV files with your own data and rerun the following scripts:
 
 - `Model Construction_Deuteration.R`
 - `Cross validation_Deuteration.R`
 
-Those scripts use the real deuteration dataset and the same steps, with more descriptors and longer model searches.
+As long as the file names and table structure remain unchanged, the scripts should run without any additional modifications.
+You can adjust the sample.size parameter (rows 33–38) to match the size of your dataset. You may specify either the actual number of samples or a percentage of the total dataset.
 
 ## Typical runtime
 
